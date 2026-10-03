@@ -85,9 +85,9 @@ function renderStart(){
   const resume = doneCount()>0;
   $('app').innerHTML = `
   <section class="bg-white rounded-2xl p-5 shadow-sm">
-    <h1 class="text-xl font-extrabold mb-1">수평 검사</h1>
+    <h1 class="text-xl font-extrabold mb-1">Rack 수평 검사</h1>
     <p class="text-sm text-slate-500 mb-5">시리얼 넘버를 입력하고 검사를 시작하세요.</p>
-    <div class="text-sm font-bold mb-2">시리얼 접두사</div>
+    <div class="text-sm font-bold mb-2">Type 선택 </div>
     <div class="grid grid-cols-2 gap-3 mb-5">
       ${['905','907'].map(p=>`<button onclick="setPrefix('${p}')" class="h-16 rounded-xl text-2xl font-extrabold border-2 ${S.prefix===p?'text-white border-transparent':'bg-white text-slate-500 border-slate-300'}" style="${S.prefix===p?'background:var(--brand)':''}">${p}</button>`).join('')}
     </div>
