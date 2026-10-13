@@ -29,7 +29,7 @@
 <script>
 const KEY = 'sl_rack_inspect_v3';
 const SIDES = ['좌', '우'];
-const PHASES = ['Rack 수평 검사'];
+const PHASES = ['수평 검사'];
 const PER = 84;          // 3 M-links x 2 sides x 14 slots
 const TOTAL = PER;
 const VALS = [-2, -1, 0, 1, 2];
@@ -85,9 +85,9 @@ function renderStart(){
   const resume = doneCount()>0;
   $('app').innerHTML = `
   <section class="bg-white rounded-2xl p-5 shadow-sm">
-    <h1 class="text-xl font-extrabold mb-1">Rack 수평 검사</h1>
+    <h1 class="text-xl font-extrabold mb-1">수평 검사</h1>
     <p class="text-sm text-slate-500 mb-5">시리얼 넘버를 입력하고 검사를 시작하세요.</p>
-    <div class="text-sm font-bold mb-2">Type 선택 </div>
+    <div class="text-sm font-bold mb-2">시리얼 접두사</div>
     <div class="grid grid-cols-2 gap-3 mb-5">
       ${['905','907'].map(p=>`<button onclick="setPrefix('${p}')" class="h-16 rounded-xl text-2xl font-extrabold border-2 ${S.prefix===p?'text-white border-transparent':'bg-white text-slate-500 border-slate-300'}" style="${S.prefix===p?'background:var(--brand)':''}">${p}</button>`).join('')}
     </div>
@@ -221,7 +221,7 @@ function buildRows(k){
   const header = ['칸 번호'];
   for(let m=0;m<3;m++) for(let s=0;s<2;s++) header.push(`M링크${m+1} ${SIDES[s]}`);
   const aoa = [['시리얼 넘버', serial()], ['검사 종류', PHASES[k]], ['검사 일시', new Date().toLocaleString('ko-KR')], [], header];
-  for(let c=0;c<14;c++){
+  for(let c=13;c>=0;c--){ // 엑셀은 14번 → 1번 내림차순
     const r=[c+1];
     for(let m=0;m<3;m++) for(let s=0;s<2;s++){ const v=S.data[idx(k,m,s,c)]; r.push(v===null?'':v); }
     aoa.push(r);
