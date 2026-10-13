@@ -218,13 +218,14 @@ function editCell(i){ S.pos=i; S.screen='inspect'; save(); render(); window.scro
 
 /* ---------- 저장 / 다운로드 ---------- */
 function buildRows(k){
-  const header = ['칸 번호'];
-  for(let m=0;m<3;m++) for(let s=0;s<2;s++) header.push(`M링크${m+1} ${SIDES[s]}`);
-  const aoa = [['시리얼 넘버', serial()], ['검사 종류', PHASES[k]], ['검사 일시', new Date().toLocaleString('ko-KR')], [], header];
-  for(let c=13;c>=0;c--){ // 엑셀은 14번 → 1번 내림차순
-    const r=[c+1];
-    for(let m=0;m<3;m++) for(let s=0;s<2;s++){ const v=S.data[idx(k,m,s,c)]; r.push(v===null?'':v); }
-    aoa.push(r);
+  // 구분(M#) | Rack 단수 | 좌 | 우  — M링크별로 14단 → 1단 순서
+  const aoa = [['시리얼 넘버', serial()], ['검사 종류', PHASES[k]], ['검사 일시', new Date().toLocaleString('ko-KR')], [], ['구분','Rack 단수','좌','우']];
+  for(let m=0;m<3;m++){
+    for(let c=13;c>=0;c--){
+      const r=[c===13 ? 'M#'+(m+1) : '', c+1];
+      for(let s=0;s<2;s++){ const v=S.data[idx(k,m,s,c)]; r.push(v===null?'':v); }
+      aoa.push(r);
+    }
   }
   return aoa;
 }
@@ -256,17 +257,25 @@ function makeZip(files){
 const xe = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function sheetXml(aoa){
   const col = j => String.fromCharCode(65+j);
+  // 스타일: 1=머리글, 2=구분(M#), 3=Rack 단수("14단"), 4=값
+  const styleOf = (i,j) => i===4 ? 1 : (i>=5 ? [2,3,4,4][j] : 0);
   let rows='';
   aoa.forEach((r,i)=>{
     let cells='';
-    r.forEach((v,j)=>{
-      if(v===''||v===null||v===undefined) return;
-      const ref = col(j)+(i+1);
-      cells += (typeof v==='number') ? `<c r="${ref}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
-    });
+    for(let j=0;j<4;j++){
+      const v=r[j], st=styleOf(i,j), sa = st?` s="${st}"`:'', ref=col(j)+(i+1);
+      if(v===''||v===null||v===undefined){ if(st) cells += `<c r="${ref}"${sa}/>`; continue; }
+      cells += (typeof v==='number') ? `<c r="${ref}"${sa}><v>${v}</v></c>` : `<c r="${ref}"${sa} t="inlineStr"><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+    }
     rows += `<row r="${i+1}">${cells}</row>`;
   });
-  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="7" width="14" customWidth="1"/></cols><sheetData>'+rows+'</sheetData></worksheet>';
+  const merges = [0,1,2].map(m=>`<mergeCell ref="A${6+m*14}:A${19+m*14}"/>`).join('');
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="7" width="14" customWidth="1"/></cols><sheetData>'+rows+'</sheetData><mergeCells count="3">'+merges+'</mergeCells></worksheet>';
+}
+function stylesXml(){
+  const al = '<alignment horizontal="center" vertical="center"/>';
+  const xf = (n,b) => `<xf numFmtId="${n}" fontId="0" fillId="0" borderId="${b}" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1">${al}</xf>`;
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="176" formatCode="General&quot;단&quot;"/></numFmts><fonts count="1"><font><sz val="11"/><name val="맑은 고딕"/><family val="2"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(0,1)+xf(0,1)+xf(176,1)+xf(0,1)+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
 function buildXlsxBlob(){
   const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
@@ -274,10 +283,11 @@ function buildXlsxBlob(){
   const PK='http://schemas.openxmlformats.org/package/2006/relationships';
   const sheetCT = n => `<Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
   return makeZip([
-    {name:'[Content_Types].xml', text:H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheetCT(1)+'</Types>'},
+    {name:'[Content_Types].xml', text:H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+sheetCT(1)+'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'},
     {name:'_rels/.rels', text:H+`<Relationships xmlns="${PK}"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
     {name:'xl/workbook.xml', text:H+`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${R}"><sheets><sheet name="수평검사" sheetId="1" r:id="rId1"/></sheets></workbook>`},
-    {name:'xl/_rels/workbook.xml.rels', text:H+`<Relationships xmlns="${PK}"><Relationship Id="rId1" Type="${R}/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`},
+    {name:'xl/_rels/workbook.xml.rels', text:H+`<Relationships xmlns="${PK}"><Relationship Id="rId1" Type="${R}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${R}/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml', text:stylesXml()},
     {name:'xl/worksheets/sheet1.xml', text:sheetXml(buildRows(0))}
   ]);
 }
