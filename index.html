@@ -27,14 +27,14 @@
 <main id="app" class="max-w-md mx-auto px-4 pt-4" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px)"></main>
 
 <script>
-const KEY = 'sl_rack_inspect_v3';
+const KEY = 'sl_rack_inspect_v4';
 const SIDES = ['좌', '우'];
 const PHASES = ['수평 검사'];
 const PER = 84;          // 3 M-links x 2 sides x 14 slots
 const TOTAL = PER;
 const VALS = [-2, -1, 0, 1, 2];
 const VCOLOR = {'-2':'#dc2626','-1':'#f97316','0':'#00ab6b','1':'#0ea5e9','2':'#2563eb'};
-let S = { screen:'start', prefix:'905', rest:'', data:Array(TOTAL).fill(null), pos:0 };
+let S = { screen:'start', prefix:'MEC00905', rest:'', data:Array(TOTAL).fill(null), pos:0 };
 
 function load(){ try{ const j = localStorage.getItem(KEY); if(j){ const o = JSON.parse(j); if(o && Array.isArray(o.data) && o.data.length===TOTAL) S = Object.assign(S,o); } }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
@@ -66,7 +66,9 @@ function ask(msg, okText, cancelText){
   });
 }
 function tell(msg){ return ask(msg, '확인', null); }
-const serial = () => S.prefix + '-' + S.rest.trim();
+const PREFIXES = ['MEC00905','MEC00907'];
+const cleanRest = v => String(v||'').toUpperCase().replace(/^\s*AEA/,'').replace(/[^0-9]/g,'');
+const serial = () => S.prefix + '-AEA' + S.rest.trim();
 const loc = i => ({ k:Math.floor(i/PER), m:Math.floor((i%PER)/28), s:Math.floor((i%28)/14), c:i%14 });
 const idx = (k,m,s,c) => k*PER + m*28 + s*14 + c;
 const doneCount = k => (k===undefined ? S.data : S.data.slice(k*PER,(k+1)*PER)).filter(v=>v!==null).length;
@@ -89,15 +91,15 @@ function renderStart(){
     <p class="text-sm text-slate-500 mb-5">시리얼 넘버를 입력하고 검사를 시작하세요.</p>
     <div class="text-sm font-bold mb-2">시리얼 접두사</div>
     <div class="grid grid-cols-2 gap-3 mb-5">
-      ${['905','907'].map(p=>`<button onclick="setPrefix('${p}')" class="h-16 rounded-xl text-2xl font-extrabold border-2 ${S.prefix===p?'text-white border-transparent':'bg-white text-slate-500 border-slate-300'}" style="${S.prefix===p?'background:var(--brand)':''}">${p}</button>`).join('')}
+      ${PREFIXES.map(p=>`<button onclick="setPrefix('${p}')" class="h-16 rounded-xl text-2xl font-extrabold border-2 ${S.prefix===p?'text-white border-transparent':'bg-white text-slate-500 border-slate-300'}" style="${S.prefix===p?'background:var(--brand)':''}">${p}</button>`).join('')}
     </div>
-    <label class="text-sm font-bold block mb-2" for="rest">나머지 시리얼 번호</label>
+    <label class="text-sm font-bold block mb-2" for="rest">시리얼 번호 (AEA 뒤 숫자)</label>
     <div class="flex items-center gap-2 mb-6">
-      <span class="text-2xl font-extrabold">${S.prefix}-</span>
-      <input id="rest" type="text" value="${S.rest.replace(/"/g,'&quot;')}" autocomplete="off" autocapitalize="characters" placeholder="예: 12345" class="flex-1 min-w-0 h-14 px-3 text-xl rounded-xl border-2 border-slate-300 focus:outline-none focus:border-emerald-500" oninput="S.rest=this.value.toUpperCase();this.value=S.rest;save()">
+      <span class="font-extrabold" style="font-size:1.05rem;white-space:nowrap">${S.prefix}-AEA</span>
+      <input id="rest" type="text" inputmode="numeric" pattern="[0-9]*" value="${S.rest.replace(/"/g,'&quot;')}" autocomplete="off" placeholder="숫자 입력" class="flex-1 min-w-0 h-14 px-3 text-xl rounded-xl border-2 border-slate-300 focus:outline-none focus:border-emerald-500" oninput="S.rest=cleanRest(this.value);this.value=S.rest;save()">
     </div>
     <button onclick="startInspect()" class="w-full h-16 rounded-xl text-white text-xl font-extrabold" style="background:var(--brand)">검사 시작</button>
-    <p id="err" class="text-red-600 text-sm font-semibold mt-3 hidden">나머지 시리얼 번호를 입력해 주세요.</p>
+    <p id="err" class="text-red-600 text-sm font-semibold mt-3 hidden">AEA 뒤의 시리얼 숫자를 입력해 주세요.</p>
   </section>
   ${resume?`<section class="bg-white rounded-2xl p-5 shadow-sm mt-4">
     <div class="font-bold mb-1">진행 중인 검사가 있습니다</div>
@@ -305,7 +307,10 @@ async function resetAll(){
   save(); render(); window.scrollTo(0,0);
 }
 
-load(); render();
+load();
+if(!PREFIXES.includes(S.prefix)) S.prefix = PREFIXES[0];
+S.rest = cleanRest(S.rest);
+render();
 </script>
 </body>
 </html>
