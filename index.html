@@ -12,8 +12,47 @@
   html,body{ -webkit-tap-highlight-color:transparent; }
   body{ background:#eef1f3; color:var(--ink); font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; touch-action:manipulation; }
   button{ user-select:none; -webkit-user-select:none; }
-  .vbtn{ height:92px; font-size:2.1rem; font-weight:800; color:#fff; border-radius:16px; box-shadow:0 4px 0 rgba(0,0,0,.22); transition:transform .06s, box-shadow .06s; }
-  .vbtn:active{ transform:translateY(4px); box-shadow:0 0 0 rgba(0,0,0,.22); }
+  .key{ height:auto; min-height:0; font-size:clamp(1.4rem,calc(var(--app-h,100vh)*.045),2.3rem); font-weight:800; color:var(--ink); background:#fff; border:2px solid #cbd5e1; border-radius:14px; box-shadow:0 3px 0 rgba(0,0,0,.15); transition:transform .06s, box-shadow .06s; }
+  .key:active:not(:disabled){ transform:translateY(3px); box-shadow:0 0 0 rgba(0,0,0,.15); }
+  .key:disabled{ opacity:.22; box-shadow:none; background:#e2e8f0; }
+  .enter{ height:clamp(2.8rem,calc(var(--app-h,100vh)*.075),4rem); font-size:1.25rem; font-weight:800; color:#fff; border-radius:14px; background:var(--brand); box-shadow:0 3px 0 rgba(0,0,0,.2); }
+  .enter:disabled{ opacity:.35; }
+  .sgn{ display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1; background:#fff7ed; border-color:#f97316; color:#c2410c; }
+  .sgn .sg{ font-size:clamp(1.7rem,calc(var(--app-h,100vh)*.05),2.5rem); font-weight:900; }
+  .sgn .sl{ font-size:clamp(.66rem,calc(var(--app-h,100vh)*.018),.85rem); font-weight:800; margin-top:.2rem; white-space:nowrap; }
+  .sgn.on{ background:#f97316; color:#fff; }
+  /* ---- 화면 비율 자동조정 (입력 화면: 스크롤 없이 화면에 맞춤 / 가로·세로 자동 전환) ---- */
+  body.fit{position:fixed;top:0;left:0;right:0;height:100vh;height:var(--app-h,100vh);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  body.fit header{flex:none;position:relative}
+  body.fit header>div{max-width:var(--mw,28rem);padding-top:.3rem;padding-bottom:.3rem}
+  body.fit header img{height:2rem;width:auto}
+  body.fit main{flex:1;min-height:0;overflow-y:auto;width:100%;max-width:var(--mw,28rem);display:flex;flex-direction:column;padding:.5rem 1rem calc(env(safe-area-inset-bottom,0px) + .5rem) !important}
+  .pg{flex:1 0 auto;width:100%;display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"tabs" "stat" "disp" "pad" "cells" "nav";grid-template-rows:auto auto auto minmax(13rem,1fr) auto auto;gap:.5rem}
+  .a-tabs{grid-area:tabs}.a-stat{grid-area:stat}.a-disp{grid-area:disp}.a-pad{grid-area:pad}.a-cells{grid-area:cells}.a-nav{grid-area:nav}
+  .a-tabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.375rem}
+  .a-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.375rem}
+  .a-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.5rem}
+  .a-nav button{height:clamp(2.6rem,calc(var(--app-h,100vh)*.065),3.5rem);border-radius:.75rem;font-weight:700;font-size:.9rem}
+  .box{background:#fff;border-radius:1rem;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .a-stat{padding:.55rem .8rem;border-top:4px solid var(--ink)}
+  .rk{font-size:clamp(2.4rem,calc(var(--app-h,100vh)*.085),4.2rem);font-weight:900;line-height:1;color:var(--ink)}
+  .a-disp{padding:.35rem .8rem;display:flex;align-items:center;justify-content:space-between}
+  .dv{font-size:clamp(2.2rem,calc(var(--app-h,100vh)*.07),3.6rem);font-weight:900;line-height:1.1;letter-spacing:.02em}
+  .a-pad{display:flex;flex-direction:column;gap:.5rem;min-height:0}
+  .keys{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(2.5rem,1fr));gap:.5rem}
+  .cl{height:clamp(3rem,calc(var(--app-h,100vh)*.075),4.4rem)}
+  .hint{display:none;font-size:11px;line-height:1.3;color:#64748b;text-align:center}
+  @media (min-height:780px) and (max-aspect-ratio:5/4){ .hint{display:block} }
+  @media (min-width:700px){ :root{--mw:40rem} }
+  @media (min-aspect-ratio:5/4){
+    :root{--mw:64rem}
+    .pg{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"tabs pad" "stat pad" "disp pad" "cells pad" "nav pad";grid-template-rows:auto auto auto auto 1fr;column-gap:.75rem}
+    .a-nav{align-self:end}
+    .rk{font-size:clamp(2rem,calc(var(--app-h,100vh)*.12),3.6rem)}
+    .dv{font-size:clamp(1.8rem,calc(var(--app-h,100vh)*.11),3.2rem)}
+    .cl{height:clamp(2.6rem,calc(var(--app-h,100vh)*.12),4rem)}
+  }
+
   .cell-on{ outline:3px solid var(--brand); outline-offset:1px; }
 </style>
 </head>
@@ -27,17 +66,23 @@
 <main id="app" class="max-w-md mx-auto px-4 pt-4" style="padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px)"></main>
 
 <script>
-const KEY = 'sl_rack_inspect_v4';
+const KEY = 'sl_rack_inspect_v5';
 const SIDES = ['좌', '우'];
 const PHASES = ['수평 검사'];
-const PER = 84;          // 3 M-links x 2 sides x 14 slots
+const RACKS = [1, 4, 7, 10, 13];   // 측정 대상 렉 단수
+const PER = 30;          // 3 M-links x 2 sides x 5 racks
 const TOTAL = PER;
-const VALS = [-2, -1, 0, 1, 2];
-const VCOLOR = {'-2':'#dc2626','-1':'#f97316','0':'#00ab6b','1':'#0ea5e9','2':'#2563eb'};
+const LIMIT = 184;       // 입력 가능한 최대 크기: 1.85 미만 → 1.84 (센트 단위 정수로 비교, 부호 무관)
 let S = { screen:'start', prefix:'MEC00905', rest:'', data:Array(TOTAL).fill(null), pos:0 };
 
 function load(){ try{ const j = localStorage.getItem(KEY); if(j){ const o = JSON.parse(j); if(o && Array.isArray(o.data) && o.data.length===TOTAL) S = Object.assign(S,o); } }catch(e){} }
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }
+  catch(e){
+    // 파일로 직접 열 때 일부 브라우저는 저장소를 막음 → 입력은 계속 가능, 새로고침 시에만 사라짐
+    if(!save.warned){ save.warned = true; setTimeout(()=>tell('이 브라우저에서는 입력값 자동 저장이 막혀 있어요.\n검사는 그대로 할 수 있지만, 페이지를 닫거나 새로고침하면 입력값이 사라집니다.\n검사가 끝나면 바로 엑셀로 저장해 주세요.'),0); }
+  }
+}
 const $ = id => document.getElementById(id);
 function ask(msg, okText, cancelText){
   okText = okText || '확인';
@@ -69,13 +114,14 @@ function tell(msg){ return ask(msg, '확인', null); }
 const PREFIXES = ['MEC00905','MEC00907'];
 const cleanRest = v => String(v||'').toUpperCase().replace(/^\s*AEA/,'').replace(/[^0-9]/g,'');
 const serial = () => S.prefix + '-AEA' + S.rest.trim();
-const loc = i => ({ k:Math.floor(i/PER), m:Math.floor((i%PER)/28), s:Math.floor((i%28)/14), c:i%14 });
-const idx = (k,m,s,c) => k*PER + m*28 + s*14 + c;
-const doneCount = k => (k===undefined ? S.data : S.data.slice(k*PER,(k+1)*PER)).filter(v=>v!==null).length;
-const fmt = v => v===null ? '' : (v>0 ? '+'+v : String(v));
-const pcolor = k => k===0 ? 'var(--ink)' : 'var(--brand)';
+const loc = i => ({ m:Math.floor(i/10), s:Math.floor((i%10)/5), c:i%5 });
+const idx = (m,s,c) => m*10 + s*5 + c;
+const doneCount = () => S.data.filter(v=>v!==null).length;
+const fmt = v => v===null ? '' : (v>0 ? '+'+v.toFixed(2) : v.toFixed(2));
+const vcolor = v => v<0 ? '#f97316' : (v>0 ? '#2563eb' : '#00ab6b');
 
 function render(){
+  document.body.classList.toggle('fit', S.screen==='inspect');
   $('resetBtn').classList.toggle('hidden', S.screen==='start');
   if(S.screen==='start') return renderStart();
   if(S.screen==='inspect') return renderInspect();
@@ -111,60 +157,101 @@ function setPrefix(p){ S.prefix=p; save(); renderStart(); }
 async function startInspect(){
   if(!S.rest.trim()){ $('err').classList.remove('hidden'); $('rest').focus(); return; }
   if(doneCount()>0 && !(await ask('이전에 입력한 검사 데이터가 있습니다.\n새로 시작하면 지워집니다. 계속할까요?','새로 시작'))) return;
-  S.data = Array(TOTAL).fill(null); S.pos = 0; S.screen='inspect'; save(); render(); window.scrollTo(0,0);
+  S.data = Array(TOTAL).fill(null); S.pos = 0; kReset(); S.screen='inspect'; save(); render(); window.scrollTo(0,0);
 }
 
 /* ---------- 검사 입력 화면 ---------- */
+// 숫자패드 입력 상태: 부호 + 정수부(0/1) + 소수 2자리. 소수점은 자동.
+let K = { neg:false, ip:null, dec:'' };
+function kReset(){ K = { neg:false, ip:null, dec:'' }; }
+const cents = (ip,dec) => ip*100 + Number((dec+'00').slice(0,2));
+function nextState(d){
+  let ip = K.ip, dec = K.dec;
+  if(ip===null){ if(d<=1){ ip = d; } else { ip = 0; dec = String(d); } }   // 2~9 → 0.d (정수부 0 자동)
+  else if(dec.length<2){ dec += d; }
+  else return null;
+  return {ip,dec};
+}
+function digitOk(d){ const n = nextState(d); return !!n && cents(n.ip,n.dec) <= LIMIT; }
+function pressDigit(d){
+  const n = nextState(d);
+  if(!n || cents(n.ip,n.dec) > LIMIT){ vib(); return; }   // ±1.85 이상 잠금
+  K.ip = n.ip; K.dec = n.dec;
+  if(K.dec.length===2) commit(); else render();
+}
+function pressSign(){ K.neg = !K.neg; render(); }
+function pressBack(){
+  if(K.dec.length) K.dec = K.dec.slice(0,-1);
+  else if(K.ip!==null) K.ip = null;
+  render();
+}
+function pressEnter(){ if(K.ip!==null) commit(); }
+function commit(){
+  const c = cents(K.ip,K.dec);
+  if(c > LIMIT) return;
+  S.data[S.pos] = c===0 ? 0 : (K.neg ? -c : c)/100;
+  vib(); advance();
+}
+
 function renderInspect(){
-  const {k,m,s,c} = loc(S.pos);
+  const {m,s,c} = loc(S.pos);
   const cur = S.data[S.pos];
   const pct = Math.round(doneCount()/TOTAL*100);
-  let ptabs='';
-  for(let p=0;p<PHASES.length;p++){
-    const on = p===k;
-    ptabs += `<button onclick="goPhase(${p})" class="rounded-xl py-2 text-sm font-extrabold leading-tight ${on?'text-white':'bg-white text-slate-600'}" style="${on?'background:'+pcolor(p):''}">${p+1}단계 ${PHASES[p]}<br><span class="text-xs font-bold ${on?'text-white/80':'text-slate-400'}">${doneCount(p)}/${PER}</span></button>`;
-  }
   let tabs='';
   for(let mm=0;mm<3;mm++) for(let ss=0;ss<2;ss++){
-    const base = idx(k,mm,ss,0);
-    const n = S.data.slice(base,base+14).filter(v=>v!==null).length;
+    const base = idx(mm,ss,0);
+    const n = S.data.slice(base,base+5).filter(v=>v!==null).length;
     const on = mm===m && ss===s;
-    tabs += `<button onclick="goSection(${k},${mm},${ss})" class="rounded-lg py-2 text-xs font-bold leading-tight ${on?'text-white':'bg-white text-slate-600'}" style="${on?'background:var(--ink)':''}">M${mm+1} ${SIDES[ss]}<br><span class="${on?'text-emerald-300':n===14?'text-emerald-600':'text-slate-400'}">${n}/14</span></button>`;
+    tabs += `<button onclick="goSection(${mm},${ss})" class="rounded-lg py-1.5 text-xs font-bold leading-tight ${on?'text-white':'bg-white text-slate-600'}" style="${on?'background:var(--ink)':''}">M${mm+1} ${SIDES[ss]}<br><span class="${on?'text-emerald-300':n===5?'text-emerald-600':'text-slate-400'}">${n}/5</span></button>`;
   }
   let cells='';
-  for(let i=0;i<14;i++){
-    const v = S.data[idx(k,m,s,i)];
-    cells += `<button onclick="jump(${idx(k,m,s,i)})" class="h-14 rounded-lg border text-center ${i===c?'cell-on':''} ${v===null?'bg-white border-slate-300':'border-transparent text-white'}" style="${v!==null?'background:'+VCOLOR[v]:''}"><div class="text-[11px] ${v===null?'text-slate-400':'text-white/80'}">${i+1}</div><div class="text-lg font-extrabold leading-none">${fmt(v)||'·'}</div></button>`;
+  for(let i=0;i<5;i++){
+    const v = S.data[idx(m,s,i)];
+    cells += `<button onclick="jump(${idx(m,s,i)})" class="cl rounded-lg border text-center ${i===c?'cell-on':''} ${v===null?'bg-white border-slate-300':'border-transparent text-white'}" style="${v!==null?'background:'+vcolor(v):''}"><div class="text-[11px] ${v===null?'text-slate-400':'text-white/80'}">${RACKS[i]}단</div><div class="text-base font-extrabold leading-none">${fmt(v)||'·'}</div></button>`;
   }
+  const typed = (K.neg?'−':'+') + (K.ip===null?'_':K.ip) + '.' + (K.dec+'__').slice(0,2);
+  const key = d => `<button class="key" ${digitOk(d)?'':'disabled'} onclick="pressDigit(${d})">${d}</button>`;
   $('app').innerHTML = `
-  <div class="grid grid-cols-6 gap-1.5 mb-3">${tabs}</div>
-  <section class="bg-white rounded-2xl p-4 shadow-sm mb-3 border-t-4" style="border-color:${pcolor(k)}">
-    <div class="text-sm font-extrabold mb-1" style="color:${pcolor(k)}">${PHASES[k]}</div>
-    <div class="flex items-center justify-between">
-      <div class="text-3xl font-extrabold">M링크 ${m+1}</div>
-      <div class="px-4 py-1 rounded-full text-white text-2xl font-extrabold" style="background:${s===0?'var(--ink)':'var(--brand)'}">${SIDES[s]} ${s===0?'(Left)':'(Right)'}</div>
+  <div class="pg">
+    <div class="a-tabs">${tabs}</div>
+    <section class="a-stat box">
+      <div class="flex items-center justify-between">
+        <div class="text-2xl font-extrabold">M링크 ${m+1}</div>
+        <div class="px-3 py-1 rounded-full text-white text-xl font-extrabold" style="background:${s===0?'var(--ink)':'var(--brand)'}">${SIDES[s]} ${s===0?'(Left)':'(Right)'}</div>
+      </div>
+      <div class="flex items-end justify-between mt-1">
+        <div><span class="rk">${RACKS[c]}</span><span class="text-xl font-bold ml-1">번 칸</span></div>
+        <div class="text-right text-xs text-slate-500">저장값<div class="text-xl font-extrabold text-slate-800">${cur===null?'-':fmt(cur)}</div></div>
+      </div>
+      <div class="h-2 bg-slate-200 rounded-full mt-2 overflow-hidden"><div class="h-full" style="width:${pct}%;background:var(--brand)"></div></div>
+      <div class="text-xs text-slate-500 mt-1 text-right">전체 ${doneCount()}/${TOTAL}칸 · ${serial()}</div>
+    </section>
+    <section class="a-disp box">
+      <div class="text-xs text-slate-500 font-semibold leading-tight">허용 범위 ±1.85 미만<br>1.85 이상은 잠겨 있어요</div>
+      <div class="dv" style="color:${K.neg?'#f97316':'var(--ink)'}">${typed}</div>
+    </section>
+    <div class="a-pad">
+      <div class="keys">
+        ${[7,8,9,4,5,6,1,2,3].map(key).join('')}
+        <button class="key sgn ${K.neg?'on':''}" onclick="pressSign()"><span class="sg">−</span><span class="sl">${K.neg?'적용 중 · 해제':'마이너스 변경'}</span></button>
+        ${key(0)}
+        <button class="key" onclick="pressBack()">⌫</button>
+      </div>
+      <button class="enter" ${K.ip===null?'disabled':''} onclick="pressEnter()">확인 · 다음 ▶</button>
+      <p class="hint">소수점은 자동 · 1.84 → 1 8 4 · 0.35 → 3 5 · 0.05 → 0 0 5 · 1.2 → 1 2 확인<br>기본은 + · 마이너스 값은 주황색 '마이너스 변경' 버튼을 먼저 누르세요</p>
     </div>
-    <div class="flex items-end justify-between mt-2">
-      <div><span class="text-6xl font-black" style="color:${pcolor(k)}">${c+1}</span><span class="text-2xl font-bold ml-1">번 칸</span></div>
-      <div class="text-right text-sm text-slate-500">현재값<div class="text-3xl font-extrabold text-slate-800">${cur===null?'-':fmt(cur)}</div></div>
+    <div class="a-cells">${cells}</div>
+    <div class="a-nav">
+      <button onclick="prev()" class="bg-white border-2 border-slate-300">◀ 이전 칸</button>
+      <button onclick="next()" class="bg-white border-2 border-slate-300">건너뛰기 ▶</button>
+      <button onclick="S.screen='review';save();render();window.scrollTo(0,0)" class="text-white" style="background:var(--ink)">결과 보기</button>
     </div>
-    <div class="h-2 bg-slate-200 rounded-full mt-3 overflow-hidden"><div class="h-full" style="width:${pct}%;background:var(--brand)"></div></div>
-    <div class="text-xs text-slate-500 mt-1 text-right">전체 ${doneCount()}/${TOTAL}칸 · ${serial()}</div>
-  </section>
-  <div class="grid grid-cols-5 gap-2 mb-4">
-    ${VALS.map(v=>`<button class="vbtn" style="background:${VCOLOR[v]}" onclick="setVal(${v})">${v>0?'+'+v:v}</button>`).join('')}
-  </div>
-  <div class="grid grid-cols-7 gap-1.5 mb-4">${cells}</div>
-  <div class="grid grid-cols-3 gap-2">
-    <button onclick="prev()" class="h-14 rounded-xl bg-white border-2 border-slate-300 font-bold">◀ 이전 칸</button>
-    <button onclick="next()" class="h-14 rounded-xl bg-white border-2 border-slate-300 font-bold">건너뛰기 ▶</button>
-    <button onclick="S.screen='review';save();render();window.scrollTo(0,0)" class="h-14 rounded-xl text-white font-bold" style="background:var(--ink)">결과 보기</button>
   </div>`;
+  $('app').scrollTop = 0;
 }
 function vib(){ try{ navigator.vibrate && navigator.vibrate(15); }catch(e){} }
-function setVal(v){ S.data[S.pos] = v; vib(); advance(); }
 function advance(){
-  const was = S.pos;
+  kReset();
   if(S.pos < TOTAL-1){ S.pos++; }
   else {
     const e = S.data.findIndex(x=>x===null);
@@ -172,33 +259,29 @@ function advance(){
   }
   save(); render();
 }
-function next(){ if(S.pos<TOTAL-1){ S.pos++; save(); render(); } }
-function prev(){ if(S.pos>0){ S.pos--; save(); render(); } }
-function jump(i){ S.pos=i; save(); render(); }
-function goPhase(p){
-  const b = p*PER, e = S.data.slice(b,b+PER).findIndex(x=>x===null);
-  S.pos = b + (e>=0?e:0); save(); render();
-}
-function goSection(k,m,s){
-  const base = idx(k,m,s,0), e = S.data.slice(base,base+14).findIndex(x=>x===null);
-  S.pos = base + (e>=0?e:0); save(); render();
+function next(){ if(S.pos<TOTAL-1){ S.pos++; kReset(); save(); render(); } }
+function prev(){ if(S.pos>0){ S.pos--; kReset(); save(); render(); } }
+function jump(i){ S.pos=i; kReset(); save(); render(); }
+function goSection(m,s){
+  const base = idx(m,s,0), e = S.data.slice(base,base+5).findIndex(x=>x===null);
+  S.pos = base + (e>=0?e:0); kReset(); save(); render();
 }
 
 /* ---------- 최종 확인 화면 ---------- */
 function reviewTable(k){
-  let head = '<th class="p-1 text-xs">칸</th>';
+  let head = '<th class="p-1 text-xs">단</th>';
   for(let m=0;m<3;m++) for(let s=0;s<2;s++) head += `<th class="p-1 text-[11px] leading-tight">M${m+1}<br>${SIDES[s]}</th>`;
   let rows='';
-  for(let c=0;c<14;c++){
-    rows += `<tr><td class="p-1 text-center text-xs font-bold text-slate-500">${c+1}</td>`;
+  for(let c=4;c>=0;c--){
+    rows += `<tr><td class="p-1 text-center text-xs font-bold text-slate-500">${RACKS[c]}</td>`;
     for(let m=0;m<3;m++) for(let s=0;s<2;s++){
-      const i = idx(k,m,s,c), v = S.data[i];
-      rows += `<td class="p-0.5"><button onclick="editCell(${i})" class="w-full h-10 rounded-md font-extrabold ${v===null?'bg-slate-100 text-slate-300 border border-dashed border-slate-300':'text-white'}" style="${v!==null?'background:'+VCOLOR[v]:''}">${v===null?'·':fmt(v)}</button></td>`;
+      const i = idx(m,s,c), v = S.data[i];
+      rows += `<td class="p-0.5"><button onclick="editCell(${i})" class="w-full h-12 rounded-md font-extrabold ${v===null?'bg-slate-100 text-slate-300 border border-dashed border-slate-300':'text-white'}" style="font-size:11px;${v!==null?'background:'+vcolor(v):''}">${v===null?'·':fmt(v)}</button></td>`;
     }
     rows += '</tr>';
   }
   return `<section class="bg-white rounded-2xl p-2 shadow-sm mb-3">
-    <div class="px-1 pt-1 pb-2 font-extrabold" style="color:${pcolor(k)}">${PHASES[k]} <span class="text-sm text-slate-500 font-bold">${doneCount(k)}/${PER}</span></div>
+    <div class="px-1 pt-1 pb-2 font-extrabold" style="color:var(--ink)">${PHASES[k]} <span class="text-sm text-slate-500 font-bold">${doneCount()}/${PER}</span></div>
     <table class="w-full table-fixed"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>
   </section>`;
 }
@@ -216,16 +299,16 @@ function renderReview(){
     <button onclick="S.screen='inspect';save();render();window.scrollTo(0,0)" class="h-12 rounded-xl bg-white border-2 border-slate-300 font-bold">검사 화면으로 돌아가기</button>
   </div>`;
 }
-function editCell(i){ S.pos=i; S.screen='inspect'; save(); render(); window.scrollTo(0,0); }
+function editCell(i){ S.pos=i; kReset(); S.screen='inspect'; save(); render(); window.scrollTo(0,0); }
 
 /* ---------- 저장 / 다운로드 ---------- */
 function buildRows(k){
-  // 구분(M#) | Rack 단수 | 좌 | 우  — M링크별로 14단 → 1단 순서
-  const aoa = [['시리얼 넘버', serial()], ['검사 종류', PHASES[k]], ['검사 일시', new Date().toLocaleString('ko-KR')], [], ['구분','Rack 단수','좌','우']];
+  // 구분(M#) | Rack 단수 | 좌 | 우  — M링크별로 13 → 1단 순서 (측정 렉: 1,4,7,10,13)
+  const aoa = [['시리얼 넘버', serial()], ['검사 종류', PHASES[k]+' (허용 범위 ±1.85 미만)'], ['검사 일시', new Date().toLocaleString('ko-KR')], [], ['구분','Rack 단수','좌','우']];
   for(let m=0;m<3;m++){
-    for(let c=13;c>=0;c--){
-      const r=[c===13 ? 'M#'+(m+1) : '', c+1];
-      for(let s=0;s<2;s++){ const v=S.data[idx(k,m,s,c)]; r.push(v===null?'':v); }
+    for(let c=4;c>=0;c--){
+      const r=[c===4 ? 'M#'+(m+1) : '', RACKS[c]];
+      for(let s=0;s<2;s++){ const v=S.data[idx(m,s,c)]; r.push(v===null?'':v); }
       aoa.push(r);
     }
   }
@@ -271,13 +354,13 @@ function sheetXml(aoa){
     }
     rows += `<row r="${i+1}">${cells}</row>`;
   });
-  const merges = [0,1,2].map(m=>`<mergeCell ref="A${6+m*14}:A${19+m*14}"/>`).join('');
+  const merges = [0,1,2].map(m=>`<mergeCell ref="A${6+m*5}:A${10+m*5}"/>`).join('');
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="7" width="14" customWidth="1"/></cols><sheetData>'+rows+'</sheetData><mergeCells count="3">'+merges+'</mergeCells></worksheet>';
 }
 function stylesXml(){
   const al = '<alignment horizontal="center" vertical="center"/>';
   const xf = (n,b) => `<xf numFmtId="${n}" fontId="0" fillId="0" borderId="${b}" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1">${al}</xf>`;
-  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="176" formatCode="General&quot;단&quot;"/></numFmts><fonts count="1"><font><sz val="11"/><name val="맑은 고딕"/><family val="2"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(0,1)+xf(0,1)+xf(176,1)+xf(0,1)+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
+  return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="176" formatCode="General&quot;단&quot;"/></numFmts><fonts count="1"><font><sz val="11"/><name val="맑은 고딕"/><family val="2"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color auto="1"/></left><right style="thin"><color auto="1"/></right><top style="thin"><color auto="1"/></top><bottom style="thin"><color auto="1"/></bottom><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'+xf(0,1)+xf(0,1)+xf(176,1)+xf(2,1)+'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>';
 }
 function buildXlsxBlob(){
   const H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
@@ -307,6 +390,9 @@ async function resetAll(){
   save(); render(); window.scrollTo(0,0);
 }
 
+function setH(){ const h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight||document.documentElement.clientHeight; document.documentElement.style.setProperty('--app-h',Math.round(h)+'px'); }
+setH(); window.addEventListener('resize',setH); window.addEventListener('orientationchange',()=>setTimeout(setH,200));
+if(window.visualViewport){ window.visualViewport.addEventListener('resize',setH); }
 load();
 if(!PREFIXES.includes(S.prefix)) S.prefix = PREFIXES[0];
 S.rest = cleanRest(S.rest);
